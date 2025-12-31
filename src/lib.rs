@@ -48,7 +48,7 @@ impl ProgressBar {
     }
 
     pub fn tick(&mut self, progress: usize) {
-        clearscreen::clear().expect("Failed to clear screen");
+        clear_screen().expect("Failed to clear screen");
 
         let percent = (progress * 100) / self.size;
         self.curr = (percent * self.len) / 100;
@@ -98,4 +98,14 @@ impl ProgressBar {
         self.fill_style = fill.ch();
         self.empty_style = emp.ch();
     }
+}
+
+
+/// Clears the screen
+pub fn clear_screen() -> std::io::Result<()> {
+    let mut stdout = std::io::stdout();
+
+    stdout.write("\x1b[2J".as_bytes())?;
+
+    Ok(())
 }
