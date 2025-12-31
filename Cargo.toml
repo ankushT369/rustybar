@@ -1,0 +1,10 @@
+[package]
+name = "rustybar"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A simple terminal progress bar for Rust programs"
+
+[dependencies]
+clearscreen = "2"
+
