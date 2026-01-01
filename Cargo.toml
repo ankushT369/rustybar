@@ -8,5 +8,4 @@ readme = "README.md"
 
 
 [dependencies]
-clearscreen = "2"
 
