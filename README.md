@@ -45,7 +45,11 @@ Run:
 ```
 cargo run
 ```
+## Preview
 
+Below are real screenshots generated using rustybar while downloading a file.
+
+<p align="center"> <img src="https://raw.githubusercontent.com/ankushT369/rustybar/main/assets/sample1.png" width="700"/> <br/> <img src="https://raw.githubusercontent.com/ankushT369/rustybar/main/assets/sample2.png" width="700"/> <br/> <img src="https://raw.githubusercontent.com/ankushT369/rustybar/main/assets/sample3.png" width="700"/> </p>
 
 ## Custom Styling
 
