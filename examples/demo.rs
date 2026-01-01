@@ -1,4 +1,5 @@
 use rustybar::*;
+
 use std::{thread, time::Duration};
 
 fn main() {
@@ -6,8 +7,7 @@ fn main() {
     hide_cursor().expect("Failed to hide cursor");
     let total_size = 50_000;
 
-    let mut bar1 = ProgressBar::new("Downloading bar 1", 40, total_size);
-    let mut bar2 = ProgressBar::new("Downloading bar 2", 40, total_size);
+    let mut bar = ProgressBar::new("Downloading bar 1", 40, total_size);
 
     let mut downloaded = 0;
 
@@ -17,9 +17,7 @@ fn main() {
             downloaded = total_size;
         }
 
-        bar1.tick(downloaded, 1);
-        bar2.tick(downloaded, 2);
-
+        bar.tick(downloaded);
         thread::sleep(Duration::from_millis(80));
     }
 

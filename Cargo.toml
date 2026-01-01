@@ -9,4 +9,5 @@ readme = "README.md"
 
 [dependencies]
 clearscreen = "2"
+crossterm = "0.29.0"
 
