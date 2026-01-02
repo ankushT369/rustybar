@@ -1,3 +1,4 @@
+use atty::Stream;
 use crossterm::{
     ExecutableCommand,
     cursor::{self, MoveTo},
@@ -9,6 +10,13 @@ use std::time::Instant;
 
 const UNICODE_BAR_FULL_CHARS: &[char] = &['█', '#', '=', '━'];
 const UNICODE_BAR_EMPTY_CHARS: &[char] = &['█', ' ', '-', '━'];
+
+#[allow(dead_code)]
+#[derive(PartialEq, Eq)]
+enum TerminalMode {
+    Interactive,
+    Headless,
+}
 
 #[allow(dead_code)]
 pub enum FillStyle {
@@ -101,11 +109,21 @@ pub struct ProgressBar {
 
     row: u16,
     col: u16,
+
+    term_mode: TerminalMode,
 }
 
 impl ProgressBar {
     pub fn new(desc: &str, len: usize, size: usize) -> Self {
-        cursor_hide();
+        let term_mode = if !atty::is(Stream::Stdout) {
+            TerminalMode::Headless
+        } else {
+            TerminalMode::Interactive
+        };
+
+        if term_mode == TerminalMode::Interactive {
+            cursor_hide();
+        }
 
         let row;
         unsafe {
@@ -130,6 +148,8 @@ impl ProgressBar {
 
             row,
             col: 0,
+
+            term_mode,
         }
     }
 
@@ -144,7 +164,9 @@ impl ProgressBar {
         let eta = std::time::Duration::from_secs_f64(eta_secs);
 
         let mut out = io::stdout();
-        out.execute(MoveTo(self.col, self.row)).unwrap();
+        if self.term_mode == TerminalMode::Interactive {
+            out.execute(MoveTo(self.col, self.row)).unwrap();
+        }
 
         print!("{} ", self.desc);
         print!("{}", self.fill_color);
@@ -197,6 +219,8 @@ impl ProgressBar {
 
 impl Drop for ProgressBar {
     fn drop(&mut self) {
-        cursor_restore();
+        if self.term_mode == TerminalMode::Interactive {
+            cursor_restore();
+        }
     }
 }

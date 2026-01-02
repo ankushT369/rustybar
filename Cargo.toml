@@ -8,5 +8,5 @@ readme = "README.md"
 
 
 [dependencies]
+atty = "0.2.14"
 crossterm = "0.29.0"
-

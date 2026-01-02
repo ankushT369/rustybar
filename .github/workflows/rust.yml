@@ -1,5 +1,5 @@
 name: Rust
-run-name: Build check on different OS
+run-name: Cargo fmt check and Build check on different OS
 on:
   push:
     branches: [ "main" ]
@@ -27,3 +27,5 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: cargo build
+    - name: Run demo
+      run: cargo run --example demo
