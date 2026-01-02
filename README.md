@@ -19,7 +19,7 @@ If you are writing downloaders, installers — this is made for that.
 
 Add it to your project with:
 
-```
+```sh
 cargo add rustybar
 ```
 
@@ -45,9 +45,15 @@ fn main() {
 
 Run:
 
-```
+```sh
 cargo run
 ```
+
+Run Demo:
+```sh
+cargo run --example demo
+```
+
 ## Preview
 
 Below are real screenshots generated using rustybar while downloading a file.
@@ -68,7 +74,6 @@ Change colors:
 bar.color(Color::Cyan, Color::Gray);
 ```
 
-
 ## License
 
 Dual-licensed under:
@@ -77,5 +82,3 @@ Dual-licensed under:
 * MIT
 
 Use it freely in personal and commercial projects.
-
-
