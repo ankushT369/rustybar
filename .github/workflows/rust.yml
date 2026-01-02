@@ -1,4 +1,4 @@
-name: Rust
+name: Rust / build(ubuntu-latest)
 
 on:
   push:
