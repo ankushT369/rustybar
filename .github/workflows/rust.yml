@@ -1,5 +1,5 @@
 name: Rust
-run-name: ${{ github.actor }} is learning GitHub Actions
+run-name: Build check on different OS
 on:
   push:
     branches: [ "main" ]
