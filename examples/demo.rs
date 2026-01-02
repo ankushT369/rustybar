@@ -1,4 +1,5 @@
 use rustybar::*;
+use std::io::Read;
 
 use std::{thread, time::Duration};
 
@@ -9,7 +10,13 @@ fn main() {
 
     let mut downloaded = 0;
 
+
     while downloaded < total_size {
+        // You can add more sofisticated ways to halt the program, but this works.
+        if ctrl_c() {
+            panic!()
+        }
+
         downloaded += 700;
         if downloaded > total_size {
             downloaded = total_size;
