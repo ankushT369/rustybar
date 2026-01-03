@@ -2,8 +2,13 @@ use atty::Stream;
 use crossterm::{
     ExecutableCommand,
     cursor::{self, MoveTo},
+    event,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
+
+use std::io::{self, Read, Write};
+use std::sync::Once;
+use std::time::{Duration, Instant};
 use std::{
     io::{self, Write},
     sync::{
@@ -288,6 +293,24 @@ impl Drop for ProgressBar {
     }
 }
 
+/// Returns true if CTRL+C has been pressed
+///
+pub fn ctrl_c() -> bool {
+    // event::poll() checks if there is an event ready to be handled
+    // if you call event::read() without this it would halt the program until there is an event
+    if event::poll(Duration::ZERO).unwrap() {
+        // Check if the event read was of type event::Event::Key. We don't care about mouse and other events
+        if let event::Event::Key(event) = event::read().unwrap() {
+            // If the key pressed has the modifier CONTROL and the char of the key is 'c', i.e. CTRL+C
+            if event.modifiers == event::KeyModifiers::CONTROL
+                && event.code == event::KeyCode::Char('c')
+            {
+                return true;
+            }
+        }
+    }
+
+    false
 #[cfg(test)]
 mod tests {
     use super::*;
