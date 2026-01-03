@@ -9,6 +9,14 @@ use crossterm::{
 use std::io::{self, Read, Write};
 use std::sync::Once;
 use std::time::{Duration, Instant};
+use std::{
+    io::{self, Write},
+    sync::{
+        Once,
+        atomic::{AtomicU16, Ordering},
+    },
+    time::Instant,
+};
 
 const UNICODE_BAR_FULL_CHARS: &[char] = &['█', '#', '=', '━'];
 const UNICODE_BAR_EMPTY_CHARS: &[char] = &['█', ' ', '-', '━'];
@@ -37,11 +45,13 @@ pub enum EmptyStyle {
 }
 
 #[allow(dead_code)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Color {
     Red,
     Green,
     Yellow,
+    Blue,
+    Pink,
     Gray,
     Cyan,
     Reset,
@@ -54,9 +64,25 @@ impl Color {
             Color::Red => "\x1b[31m",
             Color::Green => "\x1b[32m",
             Color::Yellow => "\x1b[33m",
+            Color::Blue => "\x1b[34m",
+            Color::Pink => "\x1b[35m",
             Color::Gray => "\x1b[90m",
             Color::Cyan => "\x1b[36m",
             Color::Reset => "\x1b[0m",
+        }
+    }
+
+    #[inline(always)]
+    const fn rgb(self) -> (u8, u8, u8) {
+        match self {
+            Color::Red => (255, 60, 60),
+            Color::Green => (60, 255, 120),
+            Color::Yellow => (255, 220, 60),
+            Color::Blue => (80, 140, 255),
+            Color::Pink => (255, 100, 200),
+            Color::Gray => (160, 160, 160),
+            Color::Cyan => (60, 220, 255),
+            Color::Reset => (255, 255, 255),
         }
     }
 }
@@ -74,15 +100,13 @@ impl EmptyStyle {
 }
 
 static INIT: Once = Once::new();
-static mut NEXT_ROW: u16 = 0;
+static NEXT_ROW: AtomicU16 = AtomicU16::new(0);
 
 fn cursor_hide() {
     INIT.call_once(|| {
         enable_raw_mode().unwrap();
         let (_, row) = cursor::position().unwrap();
-        unsafe {
-            NEXT_ROW = row;
-        }
+        NEXT_ROW.store(row, Ordering::Release);
         io::stdout().execute(cursor::Hide).unwrap();
     });
 }
@@ -90,7 +114,8 @@ fn cursor_hide() {
 fn cursor_restore() {
     let mut out = io::stdout();
     out.execute(cursor::Show).unwrap();
-    out.execute(MoveTo(0, unsafe { NEXT_ROW + 1 })).unwrap();
+    out.execute(MoveTo(0, NEXT_ROW.load(Ordering::Acquire) + 1))
+        .unwrap();
     disable_raw_mode().unwrap();
 }
 
@@ -113,6 +138,10 @@ pub struct ProgressBar {
     col: u16,
 
     term_mode: TerminalMode,
+
+    grad: bool,
+    grad_start: Color,
+    grad_end: Color,
 }
 
 impl ProgressBar {
@@ -125,12 +154,6 @@ impl ProgressBar {
 
         if term_mode == TerminalMode::Interactive {
             cursor_hide();
-        }
-
-        let row;
-        unsafe {
-            row = NEXT_ROW;
-            NEXT_ROW += 1;
         }
 
         Self {
@@ -148,10 +171,14 @@ impl ProgressBar {
             fill_color: Color::Green.ch(),
             empty_color: Color::Gray.ch(),
 
-            row,
+            row: NEXT_ROW.fetch_add(1, Ordering::AcqRel),
             col: 0,
 
             term_mode,
+
+            grad: false,
+            grad_start: Color::Green,
+            grad_end: Color::Green,
         }
     }
 
@@ -171,15 +198,11 @@ impl ProgressBar {
         }
 
         print!("{} ", self.desc);
-        print!("{}", self.fill_color);
-        for _ in 0..self.curr {
-            print!("{}", self.fill_style);
+        if !self.grad {
+            self.print_bar();
+        } else {
+            self.print_grad_bar();
         }
-        print!("{}", self.empty_color);
-        for _ in self.curr..self.len {
-            print!("{}", self.empty_style);
-        }
-        print!("{} ", Color::Reset.ch());
 
         let mut disp_speed = speed;
         let mut unit = "B/s";
@@ -216,6 +239,49 @@ impl ProgressBar {
     pub fn color(&mut self, fill: Color, emp: Color) {
         self.fill_color = fill.ch();
         self.empty_color = emp.ch();
+    }
+
+    pub fn gradient(&mut self, start: Color, end: Color) {
+        self.grad = start != end;
+        self.grad_start = start;
+        self.grad_end = end;
+    }
+
+    fn print_bar(&self) {
+        print!("{}", self.fill_color);
+        for _ in 0..self.curr {
+            print!("{}", self.fill_style);
+        }
+        print!("{}", self.empty_color);
+        for _ in self.curr..self.len {
+            print!("{}", self.empty_style);
+        }
+        print!("{} ", Color::Reset.ch());
+    }
+
+    fn print_grad_bar(&self) {
+        let (sr, sg, sb) = self.grad_start.rgb();
+        let (er, eg, eb) = self.grad_end.rgb();
+
+        for i in 0..self.curr {
+            let t = i as f32 / (self.curr.saturating_sub(1).max(1)) as f32;
+
+            let r = sr as f32 + t * (er as f32 - sr as f32);
+            let g = sg as f32 + t * (eg as f32 - sg as f32);
+            let b = sb as f32 + t * (eb as f32 - sb as f32);
+
+            print!(
+                "\x1b[38;2;{};{};{}m{}",
+                r as u8, g as u8, b as u8, self.fill_style
+            );
+        }
+
+        print!("{}", self.empty_color);
+        for _ in self.curr..self.len {
+            print!("{}", self.empty_style);
+        }
+
+        print!("{}", Color::Reset.ch());
     }
 }
 

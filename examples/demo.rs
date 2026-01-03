@@ -6,6 +6,8 @@ fn main() {
     let total_size = 50_000;
 
     let mut bar = ProgressBar::new("Downloading bar 1", 40, total_size);
+    bar.style(FillStyle::Solid, EmptyStyle::Solid);
+    bar.gradient(Color::Yellow, Color::Red);
 
     let mut downloaded = 0;
 
