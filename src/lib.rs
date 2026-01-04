@@ -1,4 +1,3 @@
-use atty::Stream;
 use crossterm::{
     ExecutableCommand,
     cursor::{self, MoveTo},
@@ -8,7 +7,7 @@ use crossterm::{
 
 use std::time::Duration;
 use std::{
-    io::{self, Write},
+    io::{self, IsTerminal, Write},
     sync::{
         Once,
         atomic::{AtomicU16, Ordering},
@@ -144,7 +143,7 @@ pub struct ProgressBar {
 
 impl ProgressBar {
     pub fn new(desc: &str, len: usize, size: usize) -> Self {
-        let term_mode = if !atty::is(Stream::Stdout) {
+        let term_mode = if !io::stdout().is_terminal() {
             TerminalMode::Headless
         } else {
             TerminalMode::Interactive
