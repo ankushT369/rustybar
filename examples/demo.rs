@@ -3,9 +3,9 @@ use rustybar::*;
 use std::{thread, time::Duration};
 
 fn main() {
-    let total_size = 50_000;
+    let total_size = 20_000;
 
-    let mut bar = ProgressBar::new("Downloading bar 1", 40, total_size);
+    let mut bar = ProgressBar::new("Downloading", 40, total_size);
     bar.style(FillStyle::Solid, EmptyStyle::Solid);
     bar.gradient(Color::Yellow, Color::Red);
 
