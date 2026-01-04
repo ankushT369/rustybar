@@ -31,13 +31,21 @@ use rustybar::ProgressBar;
 use std::{thread, time::Duration};
 
 fn main() {
-    let total = 20_000;
-    let mut bar = ProgressBar::new("Downloading", 40, total);
+    let total_size = 20_000;
 
-    let mut done = 0;
-    while done < total {
-        done += 500;
-        bar.tick(done);
+    let mut bar = ProgressBar::new("Downloading bar 1", 40, total_size);
+    bar.style(FillStyle::Solid, EmptyStyle::Solid);
+    bar.gradient(Color::Yellow, Color::Red);
+
+    let mut downloaded = 0;
+
+    while downloaded < total_size {
+        downloaded += 700;
+        if downloaded > total_size {
+            downloaded = total_size;
+        }
+
+        bar.tick(downloaded);
         thread::sleep(Duration::from_millis(80));
     }
 }
@@ -88,6 +96,12 @@ Change colors:
 
 ```rust
 bar.color(Color::Cyan, Color::Gray);
+```
+
+Change Gradient:
+
+```rust
+bar.gradient(Color::Yellow, Color::Red);
 ```
 
 ## License
