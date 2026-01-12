@@ -1,0 +1,55 @@
+name: Rustybar Linux Multi-Distro CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  test-linux-distros:
+    name: Test on ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - ubuntu:22.04
+          - debian:12
+          - fedora:39
+          - archlinux:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests inside ${{ matrix.distro }} container
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ matrix.distro }}
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            set -e
+
+            echo "Running on $(cat /etc/os-release | grep PRETTY_NAME)"
+
+            # Install Rust & deps per distro
+            if command -v apt-get >/dev/null; then
+              apt-get update
+              apt-get install -y curl build-essential pkg-config libdbus-1-dev
+            elif command -v dnf >/dev/null; then
+              dnf install -y curl gcc make pkg-config dbus-devel
+            elif command -v pacman >/dev/null; then
+              pacman -Sy --noconfirm curl base-devel pkg-config dbus
+            fi
+
+            # Install Rust
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            source $HOME/.cargo/env
+
+            rustc --version
+            cargo --version
+
+            # Build and test rustybar
+            cargo build --verbose
+            cargo test --verbose
