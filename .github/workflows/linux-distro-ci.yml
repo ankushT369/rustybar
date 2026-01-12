@@ -1,0 +1,64 @@
+name: Rustybar Linux Multi-Distro CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  test-linux-distros:
+    name: Test on ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        distro:
+          - ubuntu:22.04
+          - debian:12
+          - fedora:39
+          - archlinux:latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run build & tests inside ${{ matrix.distro }}
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{ matrix.distro }}
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            set -e
+            echo "Running on $(grep PRETTY_NAME /etc/os-release)"
+
+            if command -v apt-get >/dev/null; then
+              apt-get update
+              apt-get install -y \
+                curl \
+                build-essential \
+                pkg-config \
+                libdbus-1-dev \
+                libxcb-shape0-dev \
+                libxcb-xfixes0-dev \
+                libx11-dev \
+                libxrandr-dev \
+                ca-certificates
+            elif command -v dnf >/dev/null; then
+              dnf install -y \
+                curl gcc make pkg-config \
+                dbus-devel libxcb-devel libX11-devel libXrandr-devel
+            elif command -v pacman >/dev/null; then
+              pacman -Sy --noconfirm \
+                curl base-devel pkg-config \
+                dbus libxcb libx11 libxrandr
+            fi
+
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            . $HOME/.cargo/env
+
+            rustc --version
+            cargo --version
+
+            cargo build --verbose
+            cargo test --verbose
