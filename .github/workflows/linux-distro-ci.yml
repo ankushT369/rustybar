@@ -32,7 +32,6 @@ jobs:
             set -e
             echo "Running on $(grep PRETTY_NAME /etc/os-release)"
 
-            # Install dependencies per distro
             if command -v apt-get >/dev/null; then
               apt-get update
               apt-get install -y \
@@ -55,13 +54,11 @@ jobs:
                 dbus libxcb libx11 libxrandr
             fi
 
-            # Install Rust
             curl https://sh.rustup.rs -sSf | sh -s -- -y
-            source $HOME/.cargo/env
+            . $HOME/.cargo/env
 
             rustc --version
             cargo --version
 
-            # Build & test rustybar
             cargo build --verbose
             cargo test --verbose
