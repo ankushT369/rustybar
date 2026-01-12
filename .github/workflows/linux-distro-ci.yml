@@ -23,24 +23,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run tests inside ${{ matrix.distro }} container
+      - name: Run build & tests inside ${{ matrix.distro }}
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.distro }}
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
             set -e
+            echo "Running on $(grep PRETTY_NAME /etc/os-release)"
 
-            echo "Running on $(cat /etc/os-release | grep PRETTY_NAME)"
-
-            # Install Rust & deps per distro
+            # Install dependencies per distro
             if command -v apt-get >/dev/null; then
               apt-get update
-              apt-get install -y curl build-essential pkg-config libdbus-1-dev
+              apt-get install -y \
+                curl \
+                build-essential \
+                pkg-config \
+                libdbus-1-dev \
+                libxcb-shape0-dev \
+                libxcb-xfixes0-dev \
+                libx11-dev \
+                libxrandr-dev \
+                ca-certificates
             elif command -v dnf >/dev/null; then
-              dnf install -y curl gcc make pkg-config dbus-devel
+              dnf install -y \
+                curl gcc make pkg-config \
+                dbus-devel libxcb-devel libX11-devel libXrandr-devel
             elif command -v pacman >/dev/null; then
-              pacman -Sy --noconfirm curl base-devel pkg-config dbus
+              pacman -Sy --noconfirm \
+                curl base-devel pkg-config \
+                dbus libxcb libx11 libxrandr
             fi
 
             # Install Rust
@@ -50,6 +62,6 @@ jobs:
             rustc --version
             cargo --version
 
-            # Build and test rustybar
+            # Build & test rustybar
             cargo build --verbose
             cargo test --verbose
