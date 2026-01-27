@@ -3,11 +3,17 @@ version: 2.1
 jobs:
   rust-linux:
     docker:
-      - image: cimg/rust:nightly
+      - image: cimg/base:current
     environment:
       CARGO_TERM_COLOR: always
     steps:
       - checkout
+
+      - run:
+          name: Install Rust nightly
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
 
       - run:
           name: Cargo fmt check
