@@ -24,10 +24,6 @@ jobs:
           command: cargo build
 
       - run:
-          name: Run demo example
-          command: cargo run --example demo
-
-      - run:
           name: Run unit tests
           command: cargo test
 
