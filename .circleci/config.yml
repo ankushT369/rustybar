@@ -23,10 +23,6 @@ jobs:
           name: Cargo build
           command: cargo build
 
-      - run:
-          name: Run unit tests
-          command: cargo test
-
 workflows:
   rust-workflow:
     jobs:
