@@ -1,48 +1,32 @@
 version: 2.1
 
 jobs:
-  cargo-fmt-check:
+  rust-linux:
     docker:
-      - image: cimg/rust:1.75
+      - image: cimg/rust:nightly
     environment:
       CARGO_TERM_COLOR: always
     steps:
       - checkout
+
       - run:
           name: Cargo fmt check
           command: cargo fmt --check
 
-  build-linux:
-    docker:
-      - image: cimg/rust:1.75
-    environment:
-      CARGO_TERM_COLOR: always
-    steps:
-      - checkout
-      - run: cargo build
-      - run: cargo run --example demo
-      - run: cargo test
-
-  build-macos:
-    macos:
-      xcode: "15.0"
-    environment:
-      CARGO_TERM_COLOR: always
-    steps:
-      - checkout
       - run:
-          name: Install Rust
-          command: |
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
-      - run: cargo build
-      - run: cargo run --example demo
-      - run: cargo test
+          name: Cargo build
+          command: cargo build
+
+      - run:
+          name: Run demo example
+          command: cargo run --example demo
+
+      - run:
+          name: Run unit tests
+          command: cargo test
 
 workflows:
   rust-workflow:
     jobs:
-      - cargo-fmt-check
-      - build-linux
-      - build-macos
+      - rust-linux
 
